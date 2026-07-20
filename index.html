@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>LKPD Rahasia — Kode Rahasia Angka</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0e1119;
+    --bg-vignette:#151a28;
+    --panel:#171d2c;
+    --panel-alt:#1e2740;
+    --line: #2c3550;
+    --gold:#e8a33d;
+    --gold-soft:#c98a2c;
+    --teal:#4fd1c5;
+    --red:#c1443c;
+    --ink:#eef1f6;
+    --ink-muted:#8b93a7;
+    --paper:#f4efe3;
+    --paper-ink:#211c14;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:
+      radial-gradient(ellipse at top, var(--bg-vignette) 0%, var(--bg) 60%);
+    color:var(--ink);
+    font-family:'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'Space Mono', monospace;}
+  .noise{
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+  }
+  .stamp{
+    border:3px solid var(--red);
+    color:var(--red);
+    transform: rotate(-4deg);
+    font-family:'Space Mono', monospace;
+    letter-spacing:0.15em;
+  }
+  .dossier-card{
+    background: var(--panel);
+    border:1px solid var(--line);
+    position:relative;
+  }
+  .dossier-card::before{
+    content:"";
+    position:absolute; inset:0;
+    border:1px dashed rgba(232,163,61,0.18);
+    margin:6px;
+    pointer-events:none;
+  }
+  .tab-btn{
+    font-family:'Space Mono', monospace;
+    letter-spacing:0.05em;
+    transition: all .15s ease;
+  }
+  .tab-btn.active{
+    background:var(--gold);
+    color:#171200;
+  }
+  .field-input, .field-textarea, .field-select{
+    background: var(--paper);
+    color: var(--paper-ink);
+    border-bottom:2px dashed #9c8f6c;
+    font-family:'Space Mono', monospace;
+  }
+  .field-input:focus, .field-textarea:focus{
+    outline:2px solid var(--teal);
+    outline-offset:1px;
+    border-bottom-style:solid;
+  }
+  .field-textarea{ line-height:1.5; }
+  table.mission-table th{
+    background: var(--panel-alt);
+    color: var(--gold);
+    font-family:'Space Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+  }
+  table.mission-table td{
+    border-bottom:1px solid var(--line);
+  }
+  .add-row-btn{
+    border:1px dashed var(--teal);
+    color:var(--teal);
+  }
+  .add-row-btn:hover{ background: rgba(79,209,197,0.1); }
+  .mission-pill{
+    font-family:'Space Mono', monospace;
+    letter-spacing:0.08em;
+  }
+  .glow-dot{
+    box-shadow: 0 0 8px 2px currentColor;
+  }
+  ::-webkit-scrollbar{ height:8px; width:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+  @media print{
+    body{ background:#fff !important; color:#000 !important; }
+    .no-print{ display:none !important; }
+    .dossier-card{ background:#fff !important; border:1px solid #999 !important; break-inside: avoid; }
+    .dossier-card::before{ display:none; }
+    .stamp{ color:#c1443c !important; }
+    .field-input, .field-textarea{ background:#fdfaf2 !important; color:#000 !important; }
+    table.mission-table th{ background:#eee !important; color:#000 !important; }
+  }
+</style>
+</head>
+<body class="min-h-screen noise pb-24">
+
+<!-- ===================== HEADER ===================== -->
+<header class="relative overflow-hidden border-b border-[var(--line)]">
+  <div class="max-w-4xl mx-auto px-5 pt-8 pb-6">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div>
+        <p class="mono text-xs tracking-[0.3em] text-[var(--teal)] mb-2">BERKAS OPERASI · MATEMATIKA · KELAS X</p>
+        <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight">
+          Kode Rahasia <span class="text-[var(--gold)]">Angka</span>
+        </h1>
+        <p class="text-[var(--ink-muted)] mt-1 text-sm">Lembar Kerja Peserta Didik Digital &middot; Pertemuan Pertama</p>
+      </div>
+      <div class="stamp shrink-0 px-3 py-1.5 text-xs sm:text-sm font-bold self-start mt-1">RAHASIA</div>
+    </div>
+
+    <!-- Identitas kelompok -->
+    <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div>
+        <label class="mono text-[10px] uppercase tracking-wider text-[var(--ink-muted)] block mb-1">Kelompok</label>
+        <input id="meta-kelompok" type="text" placeholder="Kelompok ..." class="field-input w-full px-2 py-2 text-sm rounded-sm">
+      </div>
+      <div>
+        <label class="mono text-[10px] uppercase tracking-wider text-[var(--ink-muted)] block mb-1">Kelas</label>
+        <input id="meta-kelas" type="text" placeholder="X ..." class="field-input w-full px-2 py-2 text-sm rounded-sm">
+      </div>
+      <div class="col-span-2 sm:col-span-1">
+        <label class="mono text-[10px] uppercase tracking-wider text-[var(--ink-muted)] block mb-1">Anggota</label>
+        <input id="meta-anggota" type="text" placeholder="Nama-nama anggota" class="field-input w-full px-2 py-2 text-sm rounded-sm">
+      </div>
+      <div>
+        <label class="mono text-[10px] uppercase tracking-wider text-[var(--ink-muted)] block mb-1">Tanggal</label>
+        <input id="meta-tanggal" type="date" class="field-input w-full px-2 py-2 text-sm rounded-sm">
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <nav class="no-print max-w-4xl mx-auto px-5 pb-4 flex gap-2 overflow-x-auto">
+    <button data-target="sec-misi1" class="tab-btn active whitespace-nowrap px-4 py-2 rounded-full text-xs border border-[var(--gold)]">MISI 01 · LIPATAN AJAIB</button>
+    <button data-target="sec-misi2" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full text-xs border border-[var(--line)] text-[var(--ink-muted)]">MISI 02 · MEMORI KODE</button>
+    <button data-target="sec-kesimpulan" class="tab-btn whitespace-nowrap px-4 py-2 rounded-full text-xs border border-[var(--line)] text-[var(--ink-muted)]">LAPORAN AKHIR</button>
+  </nav>
+</header>
+
+<main class="max-w-4xl mx-auto px-5 mt-8 space-y-8">
+
+  <!-- ===================== MISI 1 ===================== -->
+  <section id="sec-misi1">
+    <div class="flex items-center gap-3 mb-4">
+      <span class="mission-pill w-9 h-9 rounded-full bg-[var(--gold)] text-[#171200] flex items-center justify-center font-bold">01</span>
+      <div>
+        <h2 class="text-xl font-bold">Misi 1 — Lipatan Ajaib</h2>
+        <p class="text-xs text-[var(--ink-muted)]">Buka mata-mata, siapkan kertas kalian.</p>
+      </div>
+    </div>
+
+    <div class="dossier-card rounded-lg p-5">
+      <p class="text-sm text-[var(--ink-muted)] leading-relaxed mb-5">
+        Lipat kertas kalian jadi dua, berkali-kali. Setiap <span class="text-[var(--gold)] font-semibold">SELESAI</span> satu lipatan,
+        hitung dan catat jumlah lapisan kertas di tabel bawah ini.
+      </p>
+
+      <!-- Tabel data nyata -->
+      <div class="overflow-x-auto rounded-sm border border-[var(--line)]">
+        <table class="mission-table w-full text-sm" id="tabel-nyata">
+          <thead>
+            <tr>
+              <th class="px-3 py-2 text-left w-1/3">Lipatan ke-</th>
+              <th class="px-3 py-2 text-left">Jumlah Lapisan (hasil hitung nyata)</th>
+              <th class="px-2 py-2 no-print w-10"></th>
+            </tr>
+          </thead>
+          <tbody id="tabel-nyata-body"></tbody>
+        </table>
+      </div>
+      <button id="btn-add-nyata" class="add-row-btn no-print mt-2 text-xs px-3 py-1.5 rounded-full">+ tambah baris lipatan</button>
+
+      <!-- Grafik -->
+      <div class="mt-6 bg-[var(--panel-alt)] rounded-lg p-4 border border-[var(--line)]">
+        <p class="mono text-[10px] uppercase tracking-wider text-[var(--teal)] mb-2">Visualisasi Pola &middot; otomatis dari data di atas</p>
+        <div class="relative h-56">
+          <canvas id="chartLipatan"></canvas>
+        </div>
+      </div>
+
+      <p class="text-sm text-[var(--ink-muted)] leading-relaxed mt-6 mb-3">
+        Kertas sudah terlalu tebal untuk dilipat lagi? Sekarang <span class="text-[var(--gold)] font-semibold">RAMALKAN</span>
+        (tanpa melipat fisik lagi) jumlah lapisan pada lipatan berikutnya, hanya berdasarkan pola yang kalian lihat di tabel atas.
+      </p>
+
+      <div class="overflow-x-auto rounded-sm border border-[var(--line)]">
+        <table class="mission-table w-full text-sm">
+          <thead>
+            <tr>
+              <th class="px-3 py-2 text-left w-1/3">Lipatan ke-</th>
+              <th class="px-3 py-2 text-left">Prediksi Jumlah Lapisan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="px-3 py-2 mono">5</td><td class="px-2 py-1.5"><input type="text" data-store="pred-5" class="field-input w-full px-2 py-1.5 rounded-sm"></td></tr>
+            <tr><td class="px-3 py-2 mono">6</td><td class="px-2 py-1.5"><input type="text" data-store="pred-6" class="field-input w-full px-2 py-1.5 rounded-sm"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-5">
+        <label class="mono text-[11px] uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
+          Bagaimana cara kelompok kalian menghitung prediksi di atas? (boleh hitungan, gambar dijelaskan dengan kata, atau kata-kata)
+        </label>
+        <textarea data-store="misi1-caraberpikir" rows="3" class="field-textarea w-full px-3 py-2 rounded-sm text-sm" placeholder="Tulis cara berpikir kelompok kalian di sini..."></textarea>
+      </div>
+
+      <div class="mt-4">
+        <label class="mono text-[11px] uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
+          Menurut kelompok kalian, apa POLA pertambahan jumlah lapisan dari satu lipatan ke lipatan berikutnya?
+        </label>
+        <textarea data-store="misi1-pola" rows="3" class="field-textarea w-full px-3 py-2 rounded-sm text-sm" placeholder="Tulis pola yang kalian temukan..."></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MISI 2 ===================== -->
+  <section id="sec-misi2">
+    <div class="flex items-center gap-3 mb-4">
+      <span class="mission-pill w-9 h-9 rounded-full bg-[var(--gold)] text-[#171200] flex items-center justify-center font-bold">02</span>
+      <div>
+        <h2 class="text-xl font-bold">Misi 2 — Memori Kode Rahasia</h2>
+        <p class="text-xs text-[var(--ink-muted)]">Cocokkan kartu, catat pasangannya.</p>
+      </div>
+    </div>
+
+    <div class="dossier-card rounded-lg p-5">
+      <p class="text-sm text-[var(--ink-muted)] leading-relaxed mb-5">
+        Setiap kali kelompok kalian berhasil menemukan sepasang kartu yang cocok, catat pasangannya di tabel bawah ini.
+      </p>
+
+      <div class="overflow-x-auto rounded-sm border border-[var(--line)]">
+        <table class="mission-table w-full text-sm" id="tabel-kartu">
+          <thead>
+            <tr>
+              <th class="px-3 py-2 text-left w-14">No</th>
+              <th class="px-3 py-2 text-left">Kartu Perkalian Berulang</th>
+              <th class="px-3 py-2 text-left">Kartu Kode Singkat</th>
+              <th class="px-2 py-2 no-print w-10"></th>
+            </tr>
+          </thead>
+          <tbody id="tabel-kartu-body"></tbody>
+        </table>
+      </div>
+      <button id="btn-add-kartu" class="add-row-btn no-print mt-2 text-xs px-3 py-1.5 rounded-full">+ tambah pasangan kartu</button>
+
+      <div class="mt-6">
+        <label class="mono text-[11px] uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
+          Menurut kelompok kalian, apa HUBUNGAN antara kartu "kode singkat" dengan kartu "perkalian berulang" pasangannya?
+        </label>
+        <textarea data-store="misi2-hubungan" rows="3" class="field-textarea w-full px-3 py-2 rounded-sm text-sm" placeholder="Tulis hubungan yang kalian temukan..."></textarea>
+      </div>
+
+      <div class="mt-4">
+        <label class="mono text-[11px] uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
+          Coba tuliskan dengan bahasa/istilah versi kalian sendiri: menurut kalian, angka kecil di pojok atas pada kartu kode singkat itu menunjukkan apa?
+        </label>
+        <textarea data-store="misi2-pojok" rows="3" class="field-textarea w-full px-3 py-2 rounded-sm text-sm" placeholder="Tulis pendapat kelompok kalian..."></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== KESIMPULAN ===================== -->
+  <section id="sec-kesimpulan">
+    <div class="flex items-center gap-3 mb-4">
+      <span class="mission-pill w-9 h-9 rounded-full bg-[var(--red)] text-white flex items-center justify-center font-bold text-xs">FIN</span>
+      <div>
+        <h2 class="text-xl font-bold">Kesimpulan Kelompok</h2>
+        <p class="text-xs text-[var(--ink-muted)]">Untuk dipresentasikan di depan kelas.</p>
+      </div>
+    </div>
+
+    <div class="dossier-card rounded-lg p-5">
+      <p class="text-sm text-[var(--ink-muted)] leading-relaxed mb-5">
+        Tulis dengan bahasa kalian sendiri. Tidak perlu istilah matematika yang 'baku' — cukup jelaskan apa yang kelompok kalian temukan.
+      </p>
+
+      <div class="space-y-5">
+        <div>
+          <label class="mono text-[11px] uppercase tracking-wider text-[var(--gold)] block mb-1.5">Pola dari Misi 1 (Lipatan Ajaib) menurut kelompok kami adalah:</label>
+          <textarea data-store="kesimpulan-misi1" rows="3" class="field-textarea w-full px-3 py-2 rounded-sm text-sm"></textarea>
+        </div>
+        <div>
+          <label class="mono text-[11px] uppercase tracking-wider text-[var(--gold)] block mb-1.5">Pola dari Misi 2 (Memori Kode Rahasia) menurut kelompok kami adalah:</label>
+          <textarea data-store="kesimpulan-misi2" rows="3" class="field-textarea w-full px-3 py-2 rounded-sm text-sm"></textarea>
+        </div>
+        <div>
+          <label class="mono text-[11px] uppercase tracking-wider text-[var(--gold)] block mb-1.5">Nama/istilah yang kelompok kami buat sendiri untuk konsep ini:</label>
+          <input type="text" data-store="kesimpulan-istilah" class="field-input w-full px-3 py-2 rounded-sm text-sm" placeholder="Contoh: &quot;Angka Lompat Dua&quot;, dsb.">
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== FOOTER ACTION BAR ===================== -->
+<div class="no-print fixed bottom-0 inset-x-0 bg-[var(--panel)]/95 backdrop-blur border-t border-[var(--line)]">
+  <div class="max-w-4xl mx-auto px-5 py-3 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <span id="save-dot" class="w-2 h-2 rounded-full bg-[var(--teal)] glow-dot text-[var(--teal)]"></span>
+      <span id="save-status" class="mono text-[10px] text-[var(--ink-muted)]">tersimpan otomatis</span>
+    </div>
+    <div class="flex gap-2">
+      <button id="btn-print" class="mono text-xs px-3 py-2 rounded-full border border-[var(--line)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:border-[var(--teal)]">CETAK</button>
+      <button id="btn-reset" class="mono text-xs px-3 py-2 rounded-full border border-[var(--red)] text-[var(--red)] hover:bg-[var(--red)]/10">RESET</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'lkpd-kode-rahasia-angka-v1';
+
+/* ---------- generic get/set storage ---------- */
+function loadData(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+let DATA = loadData();
+function persist(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA));
+  flashSaved();
+}
+let saveTimer;
+function flashSaved(){
+  const dot = document.getElementById('save-dot');
+  const status = document.getElementById('save-status');
+  status.textContent = 'menyimpan...';
+  dot.style.opacity = 0.4;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ status.textContent='tersimpan otomatis'; dot.style.opacity=1; }, 400);
+}
+
+/* ---------- meta fields ---------- */
+['meta-kelompok','meta-kelas','meta-anggota','meta-tanggal'].forEach(id=>{
+  const el = document.getElementById(id);
+  el.value = DATA[id] || '';
+  el.addEventListener('input', ()=>{ DATA[id]=el.value; persist(); });
+});
+
+/* ---------- generic textarea/input with data-store ---------- */
+function bindStoreFields(){
+  document.querySelectorAll('[data-store]').forEach(el=>{
+    const key = el.getAttribute('data-store');
+    if(DATA[key] !== undefined) el.value = DATA[key];
+    el.addEventListener('input', ()=>{ DATA[key] = el.value; persist(); });
+  });
+}
+
+/* ---------- Tabel 1: Lipatan nyata ---------- */
+const bodyNyata = document.getElementById('tabel-nyata-body');
+function rowNyataHTML(idx, lipatan, lapisan){
+  return `<tr data-row="${idx}">
+    <td class="px-2 py-1.5">
+      <input type="text" class="field-input w-full px-2 py-1.5 rounded-sm text-center" value="${lipatan}" data-role="lipatan">
+    </td>
+    <td class="px-2 py-1.5">
+      <input type="text" inputmode="numeric" class="field-input w-full px-2 py-1.5 rounded-sm" value="${lapisan}" data-role="lapisan" placeholder="jumlah lapisan">
+    </td>
+    <td class="px-1 py-1.5 no-print text-center">
+      <button class="text-[var(--red)] text-xs" data-remove="${idx}">✕</button>
+    </td>
+  </tr>`;
+}
+let nyataCounter = 0;
+function addNyataRow(lipatan, lapisan){
+  nyataCounter++;
+  bodyNyata.insertAdjacentHTML('beforeend', rowNyataHTML(nyataCounter, lipatan ?? nyataCounter, lapisan ?? ''));
+}
+function saveNyataRows(){
+  const rows = [...bodyNyata.querySelectorAll('tr')].map(tr=>({
+    lipatan: tr.querySelector('[data-role="lipatan"]').value,
+    lapisan: tr.querySelector('[data-role="lapisan"]').value
+  }));
+  DATA['tabel-nyata'] = rows;
+  persist();
+  updateChart();
+}
+function initNyataTable(){
+  const saved = DATA['tabel-nyata'];
+  if(saved && saved.length){
+    saved.forEach(r=> addNyataRow(r.lipatan, r.lapisan));
+  } else {
+    [1,2,3,4].forEach(n=> addNyataRow(n, ''));
+  }
+  bodyNyata.addEventListener('input', saveNyataRows);
+  bodyNyata.addEventListener('click', e=>{
+    if(e.target.matches('[data-remove]')){
+      e.target.closest('tr').remove();
+      saveNyataRows();
+    }
+  });
+}
+document.getElementById('btn-add-nyata').addEventListener('click', ()=>{
+  addNyataRow('', '');
+  saveNyataRows();
+});
+
+/* ---------- Tabel 2: Kartu memori ---------- */
+const bodyKartu = document.getElementById('tabel-kartu-body');
+function rowKartuHTML(idx, no, berulang, singkat){
+  return `<tr data-row="${idx}">
+    <td class="px-2 py-1.5 mono text-center text-[var(--ink-muted)]">${no}</td>
+    <td class="px-2 py-1.5"><input type="text" class="field-input w-full px-2 py-1.5 rounded-sm" value="${berulang}" data-role="berulang" placeholder="cth. 3 x 3 x 3"></td>
+    <td class="px-2 py-1.5"><input type="text" class="field-input w-full px-2 py-1.5 rounded-sm" value="${singkat}" data-role="singkat" placeholder="cth. 3&sup3;"></td>
+    <td class="px-1 py-1.5 no-print text-center"><button class="text-[var(--red)] text-xs" data-remove="${idx}">✕</button></td>
+  </tr>`;
+}
+let kartuCounter = 0;
+function addKartuRow(berulang, singkat){
+  kartuCounter++;
+  bodyKartu.insertAdjacentHTML('beforeend', rowKartuHTML(kartuCounter, kartuCounter, berulang ?? '', singkat ?? ''));
+  renumberKartu();
+}
+function renumberKartu(){
+  [...bodyKartu.querySelectorAll('tr')].forEach((tr,i)=>{
+    tr.querySelector('td.mono').textContent = i+1;
+  });
+}
+function saveKartuRows(){
+  const rows = [...bodyKartu.querySelectorAll('tr')].map(tr=>({
+    berulang: tr.querySelector('[data-role="berulang"]').value,
+    singkat: tr.querySelector('[data-role="singkat"]').value
+  }));
+  DATA['tabel-kartu'] = rows;
+  persist();
+}
+function initKartuTable(){
+  const saved = DATA['tabel-kartu'];
+  if(saved && saved.length){
+    saved.forEach(r=> addKartuRow(r.berulang, r.singkat));
+  } else {
+    for(let i=0;i<4;i++) addKartuRow('', '');
+  }
+  bodyKartu.addEventListener('input', saveKartuRows);
+  bodyKartu.addEventListener('click', e=>{
+    if(e.target.matches('[data-remove]')){
+      e.target.closest('tr').remove();
+      renumberKartu();
+      saveKartuRows();
+    }
+  });
+}
+document.getElementById('btn-add-kartu').addEventListener('click', ()=>{
+  addKartuRow('', '');
+  saveKartuRows();
+});
+
+/* ---------- prediksi 5/6 ---------- */
+bindStoreFields();
+
+/* ---------- Chart.js ---------- */
+let chart;
+function updateChart(){
+  const rows = DATA['tabel-nyata'] || [];
+  const labels = rows.map(r => r.lipatan || '');
+  const values = rows.map(r => {
+    const v = parseFloat(r.lapisan);
+    return isNaN(v) ? null : v;
+  });
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = values;
+  chart.update();
+}
+function initChart(){
+  const ctx = document.getElementById('chartLipatan').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Jumlah Lapisan',
+        data: [],
+        borderColor: '#4fd1c5',
+        backgroundColor: 'rgba(79,209,197,0.15)',
+        pointBackgroundColor: '#e8a33d',
+        pointBorderColor: '#e8a33d',
+        pointRadius: 5,
+        tension: 0.25,
+        fill: true,
+        spanGaps: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { ticks:{ color:'#8b93a7' }, grid:{ color:'#2c3550' }, title:{ display:true, text:'Lipatan ke-', color:'#8b93a7' } },
+        y: { ticks:{ color:'#8b93a7' }, grid:{ color:'#2c3550' }, beginAtZero:true, title:{ display:true, text:'Jumlah Lapisan', color:'#8b93a7' } }
+      }
+    }
+  });
+  updateChart();
+}
+
+/* ---------- Tabs ---------- */
+const tabBtns = document.querySelectorAll('.tab-btn');
+const sections = ['sec-misi1','sec-misi2','sec-kesimpulan'].map(id=>document.getElementById(id));
+function showSection(id){
+  sections.forEach(s=> s.style.display = (s.id===id)? '' : 'none');
+  tabBtns.forEach(b=>{
+    const active = b.dataset.target === id;
+    b.classList.toggle('active', active);
+    b.classList.toggle('border-[var(--gold)]', active);
+    b.classList.toggle('border-[var(--line)]', !active);
+    b.classList.toggle('text-[var(--ink-muted)]', !active);
+  });
+}
+tabBtns.forEach(b=> b.addEventListener('click', ()=> showSection(b.dataset.target)));
+
+/* ---------- Print & Reset ---------- */
+document.getElementById('btn-print').addEventListener('click', ()=>{
+  sections.forEach(s=> s.style.display = '');
+  window.print();
+});
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  if(confirm('Yakin ingin menghapus semua isian LKPD ini? Tindakan ini tidak bisa dibatalkan.')){
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+});
+
+/* ---------- init ---------- */
+initNyataTable();
+initKartuTable();
+initChart();
+showSection('sec-misi1');
+</script>
+
+</body>
+</html>
