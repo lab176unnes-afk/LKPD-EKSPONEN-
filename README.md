@@ -1,1 +1,0 @@
-# LKPD-EKSPONEN-
